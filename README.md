@@ -1,7 +1,7 @@
 # Livestream Consumer in python for the raspberry-pi
 
 This is the livestream consumer which is able to save the streams locally.
-Its taking care of your choice you did in the web-ui: https://github.com/claudio-walser/hackday
+Its taking care of your choice you did in the web-ui: https://github.com/claudio-walser/dreambox-recorder
 
 
 ## Dependencies

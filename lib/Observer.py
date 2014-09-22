@@ -3,6 +3,7 @@
 import sys
 import MySQLdb
 import time
+import urllib
 from Daemon import Daemon
 
 class Observer(Daemon):
@@ -33,22 +34,25 @@ class Observer(Daemon):
 
 	# check db and livestream match, if you hit one, start recording till end
 	def listen(self):
+		# if stream consumer is running, cut it here already...
+
 		self.db = MySQLdb.connect("localhost","root","","dreambox-recorder")
 		self.cursor = self.db.cursor()
-		# you seriously have to optimize this
-		sql = "SELECT * FROM recording WHERE state='waiting'"
+		currentTime = int(time.time())
+		timeMin = currentTime - 5
+		timeMax = currentTime + 5
+		sql = "SELECT * FROM recording WHERE state='waiting' AND (timeStart >= %i OR timeStart <= %i)" % (timeMin, timeMax)
 		try:
 			self.cursor.execute(sql)
 			results = self.cursor.fetchall()
 			for row in results:
 				id = row[0]
 				token = row[1]
-				# check if startTime is around current time (closer than (self.checkInterval) seconds) - could be done already in the query
-				## only if statement from top was true
-				# check if livestream state is already recording - its not due to the query
-				# start recording and update state - Within consumer class
-				# save stream using https://pypi.python.org/pypi/hlsclient and ffmpeg
-				self.logging.debug("start livestream consumer for given token: %s" % (token))
+				streamUrl = 'http://10.20.0.99/web/stream.m3u?ref=%s' % (token)
+				# start recording and update state
+				# some tries with ffmpeg
+				command = "ffmpeg -i '%s' -c copy -map 0 -f segment -segment_time 600 -segment_format mp4 '/tmp/out.mp4'" % (streamUrl)
+				self.logging.debug(command)
 		except:
 			self.logging.debug("Error: unable to fecth data")
 

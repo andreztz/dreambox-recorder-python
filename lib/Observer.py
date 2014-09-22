@@ -2,18 +2,20 @@
 
 import sys
 import MySQLdb
+import time
 from Daemon import Daemon
 
 class Observer(Daemon):
 	
 	db = False
+	cursor = False
 	logging = False
 	outputPath = '/tmp/'
 	checkInterval = 5
 
 	def init(self, logging = False):
-		self.db = MySQLdb.connect("localhost","root","","hackday")
 		self.setLogging(logging)
+
 
 	def setOutputPath(self, outputPath):
 		self.outputPath = outputPath
@@ -31,13 +33,13 @@ class Observer(Daemon):
 
 	# check db and livestream match, if you hit one, start recording till end
 	def listen(self):
-		cursor = self.db.cursor()
-
+		self.db = MySQLdb.connect("localhost","root","","dreambox-recorder")
+		self.cursor = self.db.cursor()
 		# you seriously have to optimize this
 		sql = "SELECT * FROM recording WHERE state='waiting'"
 		try:
-			cursor.execute(sql)
-			results = cursor.fetchall()
+			self.cursor.execute(sql)
+			results = self.cursor.fetchall()
 			for row in results:
 				id = row[0]
 				token = row[1]
@@ -50,4 +52,4 @@ class Observer(Daemon):
 		except:
 			self.logging.debug("Error: unable to fecth data")
 
-		db.close()
+		self.db.close()

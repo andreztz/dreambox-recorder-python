@@ -14,7 +14,7 @@ config.read('config.cfg')
 # read daemon configuration
 PIDFILE = config.get('daemon', 'PIDFILE')
 LOGFILE = config.get('daemon', 'LOGFILE')
-
+print PIDFILE
 # Configure logging
 logging.basicConfig(filename=LOGFILE,level=logging.DEBUG)
 logging.captureWarnings(True)

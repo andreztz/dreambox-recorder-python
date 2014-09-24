@@ -8,6 +8,7 @@ class Consumer():
 	outfile = '/tmp/tmp.mkv'
 	process = False
 	timeEnd = 0
+	id = 0
 
 	def __init__(self, logging):
 		self.logging = logging
@@ -44,6 +45,9 @@ class Consumer():
 	def setOutfile(self, outfile):
 		self.outfile = outfile
 
+	def getOutfile(self):
+		return self.outfile
+
 	def stopRecording(self):
 		self.logging.debug('stop recording process')
 		try:
@@ -58,6 +62,12 @@ class Consumer():
 
 	def getTimeEnd(self):
 		return self.timeEnd
+
+	def setId(self, id):
+		self.id = id
+
+	def getId(self):
+		return self.id
 
 	def getProcess(self):
 		return self.process

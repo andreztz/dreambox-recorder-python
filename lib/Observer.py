@@ -30,16 +30,12 @@ class Observer(Daemon):
 
 	# main loop
 	def run(self):
+		self.db = MySQLdb.connect("localhost","root","","dreambox-recorder")
+		# maybe i can fetch the cursor here, since i now i have to commit after a update, it might work :p
 		while True:
 			#accept connections from outside
 			self.listen()
 			time.sleep(self.checkInterval)
-
-	#def stopConsumer(self, logging):
-	#	logging.debug('stop consumer now')
-	#	logging.debug(self.consumer)
-	#	if self.consumer != False:
-	#		self.consumer.stopRecording()
 
 	# check db and livestream match, if you hit one, start recording till end
 	def listen(self):
@@ -51,46 +47,58 @@ class Observer(Daemon):
 			self.logging.debug(self.consumer.getProcess())
 			
 			if currentTime >= self.consumer.getTimeEnd():
-				self.logging.debug(self.consumer.getTimeEnd())
-				self.logging.debug(currentTime)
-
-				# see here tomorrow
+				cursor = self.db.cursor()
+				sql = "UPDATE `recording` set `state`='recorded', file='%s' WHERE id=%s " % (self.consumer.getOutfile(), self.consumer.getId())
+				cursor.execute(sql)
+				self.db.commit()
+				cursor.close()
+				
 				self.consumer.stopRecording()
 				self.recording = False
 
 			return
 
-		self.db = MySQLdb.connect("localhost","root","","dreambox-recorder")
-		self.cursor = self.db.cursor()
-
 		timeMin = currentTime - 5
 		timeMax = currentTime + 5
-		sql = "SELECT * FROM recording WHERE state='waiting' AND (timeStart <= %i AND timeEnd >= %i)" % (timeMin, timeMax)
+		
+		
+		sql = "SELECT * FROM `recording` WHERE `state`='waiting' AND (timeStart <= %i AND timeEnd >= %i)" % (timeMin, timeMax)
 		try:
-			self.cursor.execute(sql)
-			results = self.cursor.fetchall()
-			for row in results:
+			
+			cursor = self.db.cursor()
+			cursor.execute(sql)
+			row = cursor.fetchone()
+			self.logging.debug(type(row))
+			if isinstance(row, tuple):
+				cursor.close()
+
 				id = row[0]
 				token = row[1]
 				timeEnd = row[4]
+				title = row[7]
+				channel = row[8]
 				streamUrl = 'http://10.20.0.99/web/stream.m3u?ref=%s' % (token)
 				zapUrl = 'http://10.20.0.99/web/zap?sRef=%s&title=PythonRecording-DontChangeChannelPlease' % (token)
 				http = urllib3.PoolManager()
 				request = http.request('GET', zapUrl)
-				
+				# TODO: use title, channel and date in outfile for better identification
 				outfile = '/home/claudio/aufnahmen/%s.mkv' % (id)
 				self.consumer = Consumer(self.logging)
 				self.consumer.setStream(streamUrl)
 				self.consumer.setOutfile(outfile)
 				self.consumer.setTimeEnd(timeEnd)
+				self.consumer.setId(id)
 				status = self.consumer.record()
-				status = True
+
 				if status == True:
+					cursor = self.db.cursor()
+					sql = "UPDATE `recording` set `state`='recording' WHERE id=%s " % (self.consumer.getId())
+					cursor.execute(sql)
+					self.db.commit()
+					cursor.close()
+
 					self.recording = True
 					self.logging.debug('recording now')
 
-				self.logging.debug(status)
 		except Exception, e:
 			self.logging.debug("<p>Error: %s</p>" % e)
-
-		self.db.close()

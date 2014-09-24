@@ -62,9 +62,8 @@ class Observer(Daemon):
 		timeMax = currentTime + 5
 		
 		
-		sql = "SELECT * FROM `recording` WHERE `state`='waiting' AND (timeStart <= %i AND timeEnd >= %i)" % (timeMin, timeMax)
 		try:
-			
+			sql = "SELECT * FROM `recording` WHERE `state`='waiting' AND (timeStart <= %i AND timeEnd >= %i)" % (timeMin, timeMax)
 			cursor = self.db.cursor()
 			cursor.execute(sql)
 			row = cursor.fetchone()

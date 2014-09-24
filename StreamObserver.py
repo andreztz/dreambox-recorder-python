@@ -41,6 +41,7 @@ if __name__ == "__main__":
 		# stop daemon
 		elif 'stop' == sys.argv[1]:
 			print "Stopping ..."
+			#streamObserver.stopConsumer(logging)
 			streamObserver.stop()
 
 		# restart daemon

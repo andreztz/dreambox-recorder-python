@@ -4,29 +4,30 @@ import time
 import os
 import sys
 import subprocess
+import urllib3
 
 # move on, nothing to see here yet
 print 'Test that streaming shit'
 
-cmd = "cvlc http://10.20.0.99/web/stream.m3u?ref=1:0:19:235C:5B:1:FFFF0182:0:0:0: --sout file/mkv:/tmp/61091.mkv"
+token = '1:0:1:13F:39:1:FFFF01D2:0:0:0:'
+
 arrayAll = [
 	"cvlc",
-	"http://10.20.0.99/web/stream.m3u?ref=1:0:19:235C:5B:1:FFFF0182:0:0:0:",
+	"http://10.20.0.99/web/stream.m3u?ref=%s" % (token),
 	"--sout",
-	"file/mkv:/tmp/61091.mkv"
-]
-arrayArgs = [
-	"http://10.20.0.99/web/stream.m3u?ref=1:0:19:235C:5B:1:FFFF0182:0:0:0:",
-	"--sout",
-	"file/mkv:/tmp/61091.mkv"
+	"file/mpg:/tmp/test.mpg"
 ]
 
+
+zapUrl = 'http://10.20.0.99/web/zap?sRef=%s&title=PythonRecording-DontChangeChannelPlease' % (token)
+http = urllib3.PoolManager()
+request = http.request('GET', zapUrl)
 #process = os.execvp("cvlc", arrayArgs)
 #process = os.popen(cmd)
 process = subprocess.Popen(arrayAll)
 
 print "Start debugging"
-time.sleep(5)
+time.sleep(25)
 print "End Debugging"
 
 for prop in dir(process):
